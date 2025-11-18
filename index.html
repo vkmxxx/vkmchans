@@ -1,61 +1,24 @@
-# vkmchans
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Новый Форчан</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      color: #333;
-    }
-    header {
-      background: #222;
-      color: #0f0;
-      padding: 20px;
-      text-align: center;
-      font-size: 32px;
-      font-weight: bold;
-    }
-    .board-list {
-      max-width: 900px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .board {
-      padding: 15px;
-      border-bottom: 1px solid #ddd;
-      cursor: pointer;
-    }
-    .board:last-child {
-      border-bottom: none;
-    }
-    .board:hover {
-      background: #f0f0f0;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <header>Новый Форчан</header>
-  <div class="board-list">
-    <div class="board">/b/ — Рандом</div>
-    <div class="board">/a/ — Аниме</div>
-    <div class="board">/tech/ — Технологии</div>
-    <div class="board">/lo/ — Лорды Оффтопа</div>
-    <div class="board">/mm/ — Мемы</div>
-    <div class="board">/c/ — Кодинг</div>
-  </div>
-  <footer>Саша-чян 2025 © Новый Форчан</footer>
-</body>
-</html>
+// server.js — Node.js + Express + SQLite сервер для ВКМчан
+
+const express = require('express'); const sqlite3 = require('sqlite3').verbose(); const bodyParser = require('body-parser'); const path = require('path');
+
+const app = express(); const PORT = process.env.PORT || 3000;
+
+// Создаём или открываем базу данных const db = new sqlite3.Database('database.sqlite', (err) => { if (err) console.error(err.message); else console.log('Connected to SQLite database.'); });
+
+// Создаём таблицу для постов db.run(CREATE TABLE IF NOT EXISTS posts ( id INTEGER PRIMARY KEY AUTOINCREMENT, board TEXT NOT NULL, content TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP ));
+
+// Middleware app.use(bodyParser.json()); app.use(express.static(path.join(__dirname, 'public')));
+
+// Получить все посты с борда app.get('/api/posts/:board', (req, res) => { const board = req.params.board; db.all('SELECT * FROM posts WHERE board = ? ORDER BY id DESC', [board], (err, rows) => { if (err) return res.status(500).json({ error: err.message }); res.json(rows); }); });
+
+// Создать новый пост app.post('/api/posts/:board', (req, res) => { const board = req.params.board; const content = req.body.content; if (!content) return res.status(400).json({ error: 'Content required' });
+
+db.run('INSERT INTO posts (board, content) VALUES (?, ?)', [board, content], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id: this.lastID, board, content });
+});
+
+});
+
+// Запуск сервера app.listen(PORT, () => { console.log(Server is running on http://localhost:${PORT}); });
